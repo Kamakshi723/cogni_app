@@ -1,0 +1,3 @@
+@echo off
+echo Starting Cogni on Windows Desktop...
+flutter run -d windows

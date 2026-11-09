@@ -1,0 +1,3 @@
+@echo off
+echo Starting Cogni on Chrome...
+flutter run -d chrome
