@@ -18,6 +18,10 @@ class StorageService {
   static const String _speedTapUnlockedLevelKey = 'cogni_speed_tap_highest_unlocked_level';
   static const String _speedTapSessionsKey = 'cogni_speed_tap_sessions_data';
 
+  // Focus Radar Keys
+  static const String _radarUnlockedLevelKey = 'cogni_radar_highest_unlocked_level';
+  static const String _radarSessionsKey = 'cogni_radar_sessions_data';
+
   static SharedPreferences? _prefs;
 
   static Future<void> init() async {
@@ -185,6 +189,57 @@ class StorageService {
     }
   }
 
+  // --- Focus Radar Operations ---
+  static int getRadarHighestUnlockedLevel() {
+    return prefs.getInt(_radarUnlockedLevelKey) ?? 1;
+  }
+
+  static Future<void> unlockRadarLevel(int level) async {
+    final current = getRadarHighestUnlockedLevel();
+    if (level > current) {
+      await prefs.setInt(_radarUnlockedLevelKey, level.clamp(1, 15));
+    }
+  }
+
+  static int getRadarBestScoreForLevel(int level) {
+    final sessions = getRadarSessions();
+    final matching = sessions.where((s) => s.levelBefore == level).toList();
+    if (matching.isEmpty) return 0;
+    return matching.map((s) => s.score).reduce(max);
+  }
+
+  static bool isRadarLevelCompleted(int level) {
+    if (level < getRadarHighestUnlockedLevel()) return true;
+    return getRadarBestScoreForLevel(level) >= 60;
+  }
+
+  static List<SessionModel> getRadarSessions() {
+    final raw = prefs.getString(_radarSessionsKey);
+    if (raw == null) return [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      final sessions = list
+          .map((item) => SessionModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+      sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return sessions;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> saveRadarSession(SessionModel session) async {
+    final sessions = getRadarSessions();
+    sessions.insert(0, session);
+    final capped = sessions.take(50).toList();
+    final jsonList = capped.map((s) => s.toJson()).toList();
+    await prefs.setString(_radarSessionsKey, jsonEncode(jsonList));
+
+    if (session.levelChange > 0) {
+      await unlockRadarLevel(session.levelAfter);
+    }
+  }
+
   // --- Stroop Sessions Operations ---
   static List<SessionModel> getSessions() {
     final raw = prefs.getString(_sessionsKey);
@@ -228,6 +283,7 @@ class StorageService {
     final sessions = getSessions();
     final matrixSessions = getMatrixSessions();
     final speedTapSessions = getSpeedTapSessions();
+    final radarSessions = getRadarSessions();
     final exportMap = {
       'exportedAt': DateTime.now().toIso8601String(),
       'app': 'Cogni - Short focus games',
@@ -236,12 +292,15 @@ class StorageService {
       'highestUnlockedLevel': getHighestUnlockedLevel(),
       'matrixHighestUnlockedLevel': getMatrixHighestUnlockedLevel(),
       'speedTapHighestUnlockedLevel': getSpeedTapHighestUnlockedLevel(),
+      'radarHighestUnlockedLevel': getRadarHighestUnlockedLevel(),
       'sessionsCount': sessions.length,
       'matrixSessionsCount': matrixSessions.length,
       'speedTapSessionsCount': speedTapSessions.length,
+      'radarSessionsCount': radarSessions.length,
       'sessions': sessions.map((s) => s.toJson()).toList(),
       'matrixSessions': matrixSessions.map((s) => s.toJson()).toList(),
       'speedTapSessions': speedTapSessions.map((s) => s.toJson()).toList(),
+      'radarSessions': radarSessions.map((s) => s.toJson()).toList(),
     };
     return const JsonEncoder.withIndent('  ').convert(exportMap);
   }
@@ -252,10 +311,12 @@ class StorageService {
     await prefs.remove(_sessionsKey);
     await prefs.remove(_matrixSessionsKey);
     await prefs.remove(_speedTapSessionsKey);
+    await prefs.remove(_radarSessionsKey);
     await prefs.remove(_isOfflineModeKey);
     await prefs.remove(_unlockedLevelKey);
     await prefs.remove(_matrixUnlockedLevelKey);
     await prefs.remove(_speedTapUnlockedLevelKey);
+    await prefs.remove(_radarUnlockedLevelKey);
   }
 
   // --- Offline Flag Simulation ---

@@ -14,6 +14,7 @@ import 'games_library_screen.dart';
 import 'level_tree_screen.dart';
 import 'matrix_intro_screen.dart';
 import 'speed_tap_intro_screen.dart';
+import 'radar_intro_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onNavigateToGames;
@@ -60,6 +61,7 @@ class HomeScreen extends StatelessWidget {
     final highestUnlocked = StorageService.getHighestUnlockedLevel();
     final matrixHighestUnlocked = StorageService.getMatrixHighestUnlockedLevel();
     final speedTapHighestUnlocked = StorageService.getSpeedTapHighestUnlockedLevel();
+    final radarHighestUnlocked = StorageService.getRadarHighestUnlockedLevel();
     final completedCount = (highestUnlocked - 1).clamp(0, 15);
     final isGuest = user?.isGuest ?? false;
     final isOffline = auth.isOffline;
@@ -651,6 +653,17 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.radar_rounded,
                     gradient: const [Color(0xFF10B981), Color(0xFF059669)],
                     isDark: isDark,
+                    badgeText: 'PLAY • Lv $radarHighestUnlocked',
+                    badgeColor: const Color(0xFF10B981).withValues(alpha: 0.18),
+                    badgeTextColor: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF059669),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RadarIntroScreen(level: radarHighestUnlocked),
+                        ),
+                      );
+                    },
                   ),
                   _buildSuiteCard(
                     context: context,

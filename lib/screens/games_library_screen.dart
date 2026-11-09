@@ -10,6 +10,8 @@ import 'matrix_intro_screen.dart';
 import 'matrix_level_tree_screen.dart';
 import 'speed_tap_intro_screen.dart';
 import 'speed_tap_level_tree_screen.dart';
+import 'radar_intro_screen.dart';
+import 'radar_level_tree_screen.dart';
 
 class GamesLibraryScreen extends StatelessWidget {
   const GamesLibraryScreen({super.key});
@@ -33,6 +35,10 @@ class GamesLibraryScreen extends StatelessWidget {
     final speedTapLevel = StorageService.getSpeedTapHighestUnlockedLevel();
     final speedTapCompleted = (speedTapLevel - 1).clamp(0, 15);
     final speedTapBest = StorageService.getSpeedTapBestScoreForLevel(speedTapLevel > 1 ? speedTapLevel - 1 : 1);
+
+    final radarLevel = StorageService.getRadarHighestUnlockedLevel();
+    final radarCompleted = (radarLevel - 1).clamp(0, 15);
+    final radarBest = StorageService.getRadarBestScoreForLevel(radarLevel > 1 ? radarLevel - 1 : 1);
 
     return Scaffold(
       appBar: AppBar(
@@ -159,6 +165,37 @@ class GamesLibraryScreen extends StatelessWidget {
                   );
                 },
               ),
+              const SizedBox(height: AppTheme.s16),
+
+              // Game 4: Focus Radar
+              _buildActiveGameCard(
+                context: context,
+                isDark: isDark,
+                title: 'Focus Radar',
+                domain: 'Selective Attention & Object Tracking',
+                level: radarLevel,
+                completed: radarCompleted,
+                bestScore: radarBest,
+                icon: Icons.radar_rounded,
+                accentColor: const Color(0xFF10B981),
+                gradient: const [Color(0xFF10B981), Color(0xFF059669)],
+                onPlay: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RadarIntroScreen(level: radarLevel),
+                    ),
+                  );
+                },
+                onMap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RadarLevelTreeScreen(showBackButton: true),
+                    ),
+                  );
+                },
+              ),
 
               const SizedBox(height: AppTheme.s24),
 
@@ -170,18 +207,6 @@ class GamesLibraryScreen extends StatelessWidget {
                   letterSpacing: 0.8,
                   color: textSecondary,
                 ),
-              ),
-              const SizedBox(height: AppTheme.s12),
-
-              _buildComingSoonCard(
-                title: 'Focus Radar',
-                domain: 'Selective & Divided Attention',
-                icon: Icons.radar_rounded,
-                color: const Color(0xFF10B981),
-                surfaceAlt: surfaceAlt,
-                border: border,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
               ),
               const SizedBox(height: AppTheme.s12),
 
