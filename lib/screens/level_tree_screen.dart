@@ -10,6 +10,7 @@ import 'game_intro_screen.dart';
 import 'matrix_level_tree_screen.dart';
 import 'speed_tap_level_tree_screen.dart';
 import 'radar_level_tree_screen.dart';
+import 'logic_level_tree_screen.dart';
 
 class LevelTreeScreen extends StatefulWidget {
   final bool showBackButton;
@@ -544,6 +545,47 @@ class _LevelTreeScreenState extends State<LevelTreeScreen> {
                       ),
                     ),
                   ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedGame = 4),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        decoration: BoxDecoration(
+                          color: _selectedGame == 4 ? const Color(0xFF8B5CF6) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+                          boxShadow: _selectedGame == 4
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.psychology_rounded,
+                              size: 13,
+                              color: _selectedGame == 4 ? Colors.white : textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Logic',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _selectedGame == 4 ? Colors.white : textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -556,7 +598,9 @@ class _LevelTreeScreenState extends State<LevelTreeScreen> {
               ? const SpeedTapLevelTreeScreen(showBackButton: false, showAppBar: false)
               : _selectedGame == 3
                   ? const RadarLevelTreeScreen(showBackButton: false, showAppBar: false)
-                  : SafeArea(
+                  : _selectedGame == 4
+                      ? const LogicLevelTreeScreen(showBackButton: false, showAppBar: false)
+                      : SafeArea(
                   child: Column(
           children: [
             // Top Tracker Summary Card

@@ -22,6 +22,10 @@ class StorageService {
   static const String _radarUnlockedLevelKey = 'cogni_radar_highest_unlocked_level';
   static const String _radarSessionsKey = 'cogni_radar_sessions_data';
 
+  // Logic Flow Keys
+  static const String _logicUnlockedLevelKey = 'cogni_logic_highest_unlocked_level';
+  static const String _logicSessionsKey = 'cogni_logic_sessions_data';
+
   static SharedPreferences? _prefs;
 
   static Future<void> init() async {
@@ -240,6 +244,58 @@ class StorageService {
     }
   }
 
+  // --- Logic Flow: 15 Levels & Progression Operations ---
+  static int getLogicHighestUnlockedLevel() {
+    final saved = prefs.getInt(_logicUnlockedLevelKey);
+    return (saved != null && saved >= 1) ? saved : 1;
+  }
+
+  static Future<void> unlockLogicLevel(int level) async {
+    final current = getLogicHighestUnlockedLevel();
+    if (level > current) {
+      await prefs.setInt(_logicUnlockedLevelKey, level.clamp(1, 15));
+    }
+  }
+
+  static int getLogicBestScoreForLevel(int level) {
+    final sessions = getLogicSessions();
+    final matching = sessions.where((s) => s.levelBefore == level).toList();
+    if (matching.isEmpty) return 0;
+    return matching.map((s) => s.score).reduce(max);
+  }
+
+  static bool isLogicLevelCompleted(int level) {
+    if (level < getLogicHighestUnlockedLevel()) return true;
+    return getLogicBestScoreForLevel(level) >= 60;
+  }
+
+  static List<SessionModel> getLogicSessions() {
+    final raw = prefs.getString(_logicSessionsKey);
+    if (raw == null) return [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      final sessions = list
+          .map((item) => SessionModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+      sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return sessions;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> saveLogicSession(SessionModel session) async {
+    final sessions = getLogicSessions();
+    sessions.insert(0, session);
+    final capped = sessions.take(50).toList();
+    final jsonList = capped.map((s) => s.toJson()).toList();
+    await prefs.setString(_logicSessionsKey, jsonEncode(jsonList));
+
+    if (session.levelChange > 0) {
+      await unlockLogicLevel(session.levelAfter);
+    }
+  }
+
   // --- Stroop Sessions Operations ---
   static List<SessionModel> getSessions() {
     final raw = prefs.getString(_sessionsKey);
@@ -284,6 +340,7 @@ class StorageService {
     final matrixSessions = getMatrixSessions();
     final speedTapSessions = getSpeedTapSessions();
     final radarSessions = getRadarSessions();
+    final logicSessions = getLogicSessions();
     final exportMap = {
       'exportedAt': DateTime.now().toIso8601String(),
       'app': 'Cogni - Short focus games',
@@ -293,14 +350,17 @@ class StorageService {
       'matrixHighestUnlockedLevel': getMatrixHighestUnlockedLevel(),
       'speedTapHighestUnlockedLevel': getSpeedTapHighestUnlockedLevel(),
       'radarHighestUnlockedLevel': getRadarHighestUnlockedLevel(),
+      'logicHighestUnlockedLevel': getLogicHighestUnlockedLevel(),
       'sessionsCount': sessions.length,
       'matrixSessionsCount': matrixSessions.length,
       'speedTapSessionsCount': speedTapSessions.length,
       'radarSessionsCount': radarSessions.length,
+      'logicSessionsCount': logicSessions.length,
       'sessions': sessions.map((s) => s.toJson()).toList(),
       'matrixSessions': matrixSessions.map((s) => s.toJson()).toList(),
       'speedTapSessions': speedTapSessions.map((s) => s.toJson()).toList(),
       'radarSessions': radarSessions.map((s) => s.toJson()).toList(),
+      'logicSessions': logicSessions.map((s) => s.toJson()).toList(),
     };
     return const JsonEncoder.withIndent('  ').convert(exportMap);
   }
@@ -312,11 +372,13 @@ class StorageService {
     await prefs.remove(_matrixSessionsKey);
     await prefs.remove(_speedTapSessionsKey);
     await prefs.remove(_radarSessionsKey);
+    await prefs.remove(_logicSessionsKey);
     await prefs.remove(_isOfflineModeKey);
     await prefs.remove(_unlockedLevelKey);
     await prefs.remove(_matrixUnlockedLevelKey);
     await prefs.remove(_speedTapUnlockedLevelKey);
     await prefs.remove(_radarUnlockedLevelKey);
+    await prefs.remove(_logicUnlockedLevelKey);
   }
 
   // --- Offline Flag Simulation ---

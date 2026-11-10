@@ -15,6 +15,7 @@ import 'level_tree_screen.dart';
 import 'matrix_intro_screen.dart';
 import 'speed_tap_intro_screen.dart';
 import 'radar_intro_screen.dart';
+import 'logic_intro_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onNavigateToGames;
@@ -62,6 +63,7 @@ class HomeScreen extends StatelessWidget {
     final matrixHighestUnlocked = StorageService.getMatrixHighestUnlockedLevel();
     final speedTapHighestUnlocked = StorageService.getSpeedTapHighestUnlockedLevel();
     final radarHighestUnlocked = StorageService.getRadarHighestUnlockedLevel();
+    final logicHighestUnlocked = StorageService.getLogicHighestUnlockedLevel();
     final completedCount = (highestUnlocked - 1).clamp(0, 15);
     final isGuest = user?.isGuest ?? false;
     final isOffline = auth.isOffline;
@@ -691,6 +693,17 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.psychology_rounded,
                     gradient: const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
                     isDark: isDark,
+                    badgeText: 'PLAY • Lv $logicHighestUnlocked',
+                    badgeColor: const Color(0xFF8B5CF6).withValues(alpha: 0.18),
+                    badgeTextColor: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF7C3AED),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LogicIntroScreen(level: logicHighestUnlocked),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

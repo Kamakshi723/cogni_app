@@ -12,6 +12,8 @@ import 'speed_tap_intro_screen.dart';
 import 'speed_tap_level_tree_screen.dart';
 import 'radar_intro_screen.dart';
 import 'radar_level_tree_screen.dart';
+import 'logic_intro_screen.dart';
+import 'logic_level_tree_screen.dart';
 
 class GamesLibraryScreen extends StatelessWidget {
   const GamesLibraryScreen({super.key});
@@ -39,6 +41,10 @@ class GamesLibraryScreen extends StatelessWidget {
     final radarLevel = StorageService.getRadarHighestUnlockedLevel();
     final radarCompleted = (radarLevel - 1).clamp(0, 15);
     final radarBest = StorageService.getRadarBestScoreForLevel(radarLevel > 1 ? radarLevel - 1 : 1);
+
+    final logicLevel = StorageService.getLogicHighestUnlockedLevel();
+    final logicCompleted = (logicLevel - 1).clamp(0, 15);
+    final logicBest = StorageService.getLogicBestScoreForLevel(logicLevel > 1 ? logicLevel - 1 : 1);
 
     return Scaffold(
       appBar: AppBar(
@@ -196,29 +202,92 @@ class GamesLibraryScreen extends StatelessWidget {
                   );
                 },
               ),
+              const SizedBox(height: AppTheme.s16),
+
+              // Game 5: Logic Flow
+              _buildActiveGameCard(
+                context: context,
+                isDark: isDark,
+                title: 'Logic Flow',
+                domain: 'Fluid Reasoning & Working Rule Shifting',
+                level: logicLevel,
+                completed: logicCompleted,
+                bestScore: logicBest,
+                icon: Icons.psychology_rounded,
+                accentColor: const Color(0xFF8B5CF6),
+                gradient: const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                onPlay: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LogicIntroScreen(level: logicLevel),
+                    ),
+                  );
+                },
+                onMap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LogicLevelTreeScreen(showBackButton: true),
+                    ),
+                  );
+                },
+              ),
 
               const SizedBox(height: AppTheme.s24),
 
-              Text(
-                'UPCOMING RESEARCH EXERCISES',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: textSecondary,
+              // Complete Suite Active Banner
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF1E1B4B), const Color(0xFF312E81)]
+                        : [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                    width: 1.0,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppTheme.s12),
-
-              _buildComingSoonCard(
-                title: 'Logic Flow',
-                domain: 'Fluid Reasoning & Working Rule Shifting',
-                icon: Icons.psychology_rounded,
-                color: const Color(0xFF8B5CF6),
-                surfaceAlt: surfaceAlt,
-                border: border,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF6366F1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.verified_rounded, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'COMPLETE 5-EXERCISE COGNITIVE SUITE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4338CA),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'All 5 scientifically validated focus protocols are unlocked and active in your daily regimen.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: AppTheme.s32),
